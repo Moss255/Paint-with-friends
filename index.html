@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html>
+   <head>
+      <title>Hello world</title>
+   </head>
+   <script src = "/socket.io/socket.io.js"></script>
+  
+   <body>
+       
+    
+    Hello world
+
+
+    <canvas id='drawingSpace'>
+        
+    </canvas>
+
+</body>
+
+<script>
+
+    var clientID = 0;
+
+    const colourArray = ['red', 'black', 'yellow', 'green'];
+    
+    var socket = io();
+    socket.on('initialconnect',function(data) {
+        console.log(data);
+        alert('You are connected as user ' + data.clientID + ' !');
+        clientID = data.clientID;
+    });
+
+    
+
+
+    let isDrawing = false;
+    let x = 0;
+    let y = 0;
+
+    const myPics = document.getElementById('drawingSpace');
+    const context = myPics.getContext('2d');
+
+    const rect = myPics.getBoundingClientRect();
+
+    myPics.addEventListener('mousedown', e => {
+        x = e.clientX - rect.left;
+        y = e.clientY - rect.top;
+        isDrawing = true;
+    });
+
+    myPics.addEventListener('mousemove', e => {
+        if (isDrawing === true) {
+            socket.emit('mousePos', {'xCoord' : x, 'yCoord' : y, 'clientX' : e.clientX, 'clientY' : e.clientY, 'clientID': clientID});
+            drawLine(context, x, y, e.clientX - rect.left, e.clientY - rect.top);
+            x = e.clientX - rect.left;
+            y = e.clientY - rect.top;
+            
+        }
+    });
+    window.addEventListener('mouseup', e => {
+        if (isDrawing === true) {
+            socket.emit('mousePos', {'xCoord' : x, 'yCoord' : y, 'clientX' : e.clientX, 'clientY' : e.clientY, 'clientID': clientID});
+            drawLine(context, x, y, e.clientX - rect.left, e.clientY - rect.top);
+            x = 0;
+            y = 0;
+            isDrawing = false;
+           
+        }
+    });
+
+    socket.on('updatePosition', function(data) {
+        if (data.clientID != clientID) {
+            drawLineForeign(context, data.xCoord, data.yCoord, data.clientX - rect.left, data.clientY - rect.top, data.clientID);
+        }
+    });
+
+    function drawLineForeign(context, x1, y1, x2, y2, client) {
+        context.beginPath();
+        context.strokeStyle = colourArray[client - 1];
+        context.lineWidth = 2;
+        context.moveTo(x1, y1);
+        context.lineTo(x2, y2);
+        context.stroke();
+        context.closePath();
+    }
+
+    function drawLine(context, x1, y1, x2, y2) {
+        context.beginPath();
+        context.strokeStyle = colourArray[clientID - 1];
+        context.lineWidth = 2;
+        context.moveTo(x1, y1);
+        context.lineTo(x2, y2);
+        context.stroke();
+        context.closePath();
+}
+
+
+
+</script>
+
+</html>
