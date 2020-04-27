@@ -20,6 +20,6 @@ io.on('connection', function(socket) {
    });
 });
 
-http.listen(80, function() {
-   console.log('listening on localhost:80');
+http.listen(5000, function() {
+   console.log('listening on localhost:5000');
 });
